@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Canvas Screen</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@2.0.0/dist/tf.min.js"></script>
+    <link rel="stylesheet" href = "style.css">
+
+</head>
+<div id = "header">
+<h1>Handwritten Character Recognition </h1>
+</div>
+<body>
+<canvas id ="mycanvas" width = "300" height = "300"></canvas>
+<br><br>
+<input type="button" style="margin-left : 546px;" id = "Predict" value="Predict">
+<div style = "display:inline-block; width:50px;"></div>
+<input type="button" value="Clear" onclick="cl()">
+</br></br>
+</br></br>
+<div id="result">
+<h2 id="demo"></h2>
+</div>
+<script>
+    var can = document.getElementById("mycanvas");
+    var ctx = can.getContext("2d");
+    ctx.fillStyle = "black";
+    ctx.fillRect(0,0, can.width, can.height);
+    var w = can.width;
+    var h = can.height;
+    var drawing = false;
+    var clearpress = true;
+    can.addEventListener("mouseup", funcmouseup);
+    can.addEventListener("mousedown", funcmousedown);
+    can.addEventListener("mousemove", funcmousemove);
+    can.addEventListener("mouseout", funcmouseout);
+    
+    function cl(){
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, w, h);
+        document.getElementById("demo" ).innerHTML = "";
+        document.getElementById('result').style.display = 'none';
+        clearpress = true;
+    }
+    
+    async function loadModel() {
+        // clear the model variable
+        model = undefined; 
+        model = await tf.loadLayersModel("../model.js/model.json");
+    }
+        loadModel();
+
+    document.getElementById("Predict").addEventListener('click', (async function () {
+        console.log("Implementation in progress, keep speaking radhe radhe\n");
+        if(clearpress)
+        {
+            document.getElementById('result').style.display = 'block';
+            document.getElementById("demo").style.paddingLeft = "300px";
+            document.getElementById("demo").innerHTML = "No Character Drawn : Please draw an alphanumeric character(A-Z or 0-9)";
+            return;
+        }
+    // preprocess canvas
+    canv = document.getElementById("mycanvas");
+    let tens = tf.browser.fromPixels(canv);
+    tens = tens.resizeNearestNeighbor([28, 28]);
+    tens = tens.mean(2);
+    tens = tens.expandDims(2);
+    tens = tens.expandDims();
+    tens = tens.toFloat();
+    let tensor = tens.div(255.0);
+ 
+    // making predictions on the preprocessed image tensor
+    let predictions = await model.predict(tensor).data();
+    
+    // get the results
+    let results = Array.from(predictions);
+    // console.log(results);
+
+    class_names = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                   'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 
+                   'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
+    var pred = results[0];
+    var predIndex = 0;
+ 
+    for (var i = 1; i < results.length; i++) {
+        if (results[i] > pred) {
+            predIndex = i;
+            pred = results[i];
+        }
+    }
+    console.log(predIndex);
+    //alert(results);
+    document.getElementById('result').style.display = 'block';
+    document.getElementById("demo").style.paddingLeft = "455px";
+    document.getElementById("demo").innerHTML = "Character Drawn : "+ class_names[predIndex] + " <br> With prediction probability = " + (pred*100).toFixed(2);
+
+}));
+    
+
+    function funcmouseup(){
+        drawing = false;
+        ctx.beginPath(); // begins a new path, after the mouse has been pulled up
+    }
+    
+    function funcmousedown(e){
+        drawing = true;
+        clearpress = false;
+        draw(e);
+    }
+    
+    function funcmousemove(e){
+        if(drawing == true){
+            draw(e);
+        }
+    }
+    
+    function funcmouseout(){
+        drawing = false;
+    }
+    
+    function draw(e){
+        ctx.lineWidth = 13;
+        ctx.lineCap = "round";
+        ctx.strokeStyle = "white";
+        //ctx.strokeStyle = "green";
+        //ctx.strokeStyle = "powderblue";
+        ctx.lineTo(e.clientX-document.getElementById('mycanvas').offsetLeft, e.clientY-document.getElementById('mycanvas').offsetTop);
+        ctx.stroke();
+    }
+    
+</script>
+
+</body>
+</html>
