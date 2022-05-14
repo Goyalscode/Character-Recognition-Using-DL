@@ -46,8 +46,8 @@
     
     async function loadModel() {
         // clear the model variable
-        model = undefined; 
-        model = await tf.loadLayersModel("model.json");
+        modell = undefined; 
+        modell = await tf.loadLayersModel("modelsjs/model.json");
     }
         loadModel();
 
@@ -71,7 +71,7 @@
     let tensor = tens.div(255.0);
  
     // making predictions on the preprocessed image tensor
-    let predictions = await model.predict(tensor).data();
+    let predictions = await modell.predict(tensor).data();
     
     // get the results
     let results = Array.from(predictions);
@@ -90,7 +90,7 @@
         }
     }
     console.log(predIndex);
-    //alert(results);
+    alert(results);
     document.getElementById('result').style.display = 'block';
     document.getElementById("demo").style.paddingLeft = "455px";
     document.getElementById("demo").innerHTML = "Character Drawn : "+ class_names[predIndex] + " <br> With prediction probability = " + (pred*100).toFixed(2);
